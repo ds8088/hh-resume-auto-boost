@@ -34,6 +34,11 @@ func runApp(ctx *AppContext, configPath string) error {
 		return fmt.Errorf("loading config: %w", err)
 	}
 
+	err = ctx.Cfg.Validate()
+	if err != nil {
+		return fmt.Errorf("validating config: %w", err)
+	}
+
 	setupLogger(ctx)
 
 	cl := createHTTPClient(ctx)

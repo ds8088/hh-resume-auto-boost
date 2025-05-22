@@ -129,8 +129,8 @@ func (cfg *Config) Validate() error {
 		return fmt.Errorf("parsing HeadHunter endpoint URL: %w", err)
 	}
 
-	if endpointURL.Scheme != "http:" && endpointURL.Scheme != "https:" {
-		return fmt.Errorf("invalid HeadHunter endpoint URL scheme: \"%v\" (must be either \"http:\" or \"https:\")", endpointURL.Scheme)
+	if endpointURL.Scheme != "http" && endpointURL.Scheme != "https" {
+		return fmt.Errorf("invalid HeadHunter endpoint URL scheme: \"%v\" (must be either \"http\" or \"https\")", endpointURL.Scheme)
 	}
 
 	if cfg.Login == "" {
