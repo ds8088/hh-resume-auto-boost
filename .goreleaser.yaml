@@ -53,8 +53,7 @@ source:
   enabled: true
   name_template: >-
     {{- .ProjectName -}}_
-    {{- .Version -}}_
-    source
+    {{- .Version -}}
 
 changelog:
   sort: asc
