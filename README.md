@@ -10,7 +10,9 @@ A command-line tool to automatically boost your HeadHunter [(hh.ru)](https://hh.
 4. Start the tool.
 
 Alternatively, you may skip the configuration and run the tool with command-line arguments, such as:
+
 `./hh-resume-auto-boost -l +78005553535 -p Bash1234`
+
 However, this is not recommended due to the risk of exposing your password in the OS process list,
 and furthermore, the password may be saved to your shell's command history,
 so it's preferable to use the config file instead.
