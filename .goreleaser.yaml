@@ -58,6 +58,7 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
+      - "^ci:"
 
 checksum:
   disable: true
