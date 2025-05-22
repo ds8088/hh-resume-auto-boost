@@ -34,7 +34,7 @@ jobs:
           check-latest: true
 
       - name: Set LF line endings on Windows
-        if: runner.os == Windows
+        if: runner.os == "Windows"
         run: |-
           git config --global core.autocrlf false
           git config --global core.eol lf
