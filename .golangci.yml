@@ -1,0 +1,52 @@
+version: "2"
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - canonicalheader
+    - copyloopvar
+    - dogsled
+    - durationcheck
+    - errchkjson
+    - errname
+    - errorlint
+    - fatcontext
+    - forcetypeassert
+    - gocheckcompilerdirectives
+    - gocritic
+    - gosec
+    - loggercheck
+    - mirror
+    - musttag
+    - nilerr
+    - nilnil
+    - noctx
+    - nosprintfhostport
+    - perfsprint
+    - prealloc
+    - predeclared
+    - promlinter
+    - rowserrcheck
+    - sloglint
+    - sqlclosecheck
+    - unconvert
+    - usestdlibvars
+    - wastedassign
+    - whitespace
+    - zerologlint
+
+formatters:
+  enable:
+    - gofumpt
+  settings:
+    gofumpt:
+      extra-rules: true

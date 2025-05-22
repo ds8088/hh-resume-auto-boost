@@ -1,0 +1,63 @@
+version: 2
+
+dist: ./dist
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: release
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+    goarch:
+      - amd64
+    goamd64:
+      - v2
+
+archives:
+  - id: default
+    format: tar.gz
+    name_template: >-
+      {{- .ProjectName -}}_
+      {{- .Version -}}_
+      {{- title .Os -}}_
+      {{- if eq .Arch "amd64" -}}
+        x86_64
+      {{- else -}}
+        {{- .Arch -}}
+      {{- end -}}
+
+    builds_info:
+      group: root
+      owner: root
+      mode: 0644
+
+    format_overrides:
+      - goos: windows
+        format: zip
+
+    files:
+      - UNLICENSE
+      - README.md
+      - .schema.json
+      - config.example.json
+
+source:
+  enabled: true
+  name_template: >-
+    {{- .ProjectName -}}_
+    {{- .Version -}}
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+checksum:
+  disable: true

@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://git.pootis.network/hh-resume-auto-boost/.schema.json",
+  "title": "hh-resume-auto-boost config schema",
+  "type": "object",
+  "required": [
+    "login",
+    "password"
+  ],
+  "properties": {
+    "debug": {
+      "type": "boolean",
+      "description": "Enable debug mode",
+      "default": false
+    },
+    "http_debug": {
+      "type": "boolean",
+      "description": "Enable HTTP debugging: responses and requests will be shown in cleartext",
+      "default": false
+    },
+    "login": {
+      "type": "string",
+      "description": "HeadHunter username (email, phone or login)",
+      "minLength": 1
+    },
+    "password": {
+      "type": "string",
+      "description": "HeadHunter password that corredponds to the login",
+      "minLength": 1
+    },
+    "endpoint": {
+      "type": "string",
+      "description": "HeadHunter endpoint URL",
+      "default": "https://hh.ru"
+    },
+    "chrome_version": {
+      "type": "string",
+      "description": "Major version of impersonated Chrome browser",
+      "default": "135",
+      "minimum": 1
+    },
+    "ignored_resumes": {
+      "type": "object",
+      "description": "Resumes that are specified here will not be boosted (blocklist)",
+      "properties": {
+        "ids": {
+          "type": "array",
+          "description": "IDs of ignored resumes",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "substrings": {
+          "type": "array",
+          "description": "Substrings that will be matched against the titles of ignored resumes",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "private": {
+          "type": "boolean",
+          "description": "Ignore all private resumes",
+          "default": false
+        },
+        "public": {
+          "type": "boolean",
+          "description": "Ignore all public resumes",
+          "default": false
+        }
+      }
+    },
+    "allowed_resumes": {
+      "type": "object",
+      "description": "Only those resumes that are specified here will be boosted (allowlist)",
+      "properties": {
+        "ids": {
+          "type": "array",
+          "description": "IDs of allowed resumes",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "substrings": {
+          "type": "array",
+          "description": "Substrings that will be matched against the titles of allowed resumes",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "discover_interval": {
+      "type": "string",
+      "description": "A Go duration that specifies how often the resume list should be updated. Set to 0 to disable auto-discovery",
+      "default": "2h30m"
+    },
+    "discover_backoff_delay": {
+      "type": "string",
+      "description": "A Go duration that specifies how much we should wait if a discovery fails for any reason",
+      "default": "5m"
+    },
+    "boost_interval": {
+      "type": "string",
+      "description": "A Go duration that specifies the desired interval between consecutive resume boosts",
+      "default": "4h2m"
+    },
+    "boost_backoff_delay": {
+      "type": "string",
+      "description": "A Go duration: specifies how much we should wait if a boost is scheduled but HH unexpectedly throws an error",
+      "default": "1m30s"
+    }
+  }
+}

@@ -1,0 +1,69 @@
+name: Build
+
+on:
+  workflow_call:
+  push:
+    paths-ignore:
+      - "**.md"
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - edited
+      - synchronize
+    paths-ignore:
+      - "**.md"
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  build:
+    name: Build package
+    runs-on: "${{ matrix.os }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - name: Setup go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          check-latest: true
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run govulncheck
+        uses: golang/govulncheck-action@v1
+        with:
+          go-package: ./...
+
+      - name: Run linters
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: latest
+          args: --timeout=10m
+
+      - name: Check if module file matches the source code
+        run: go mod tidy -diff
+
+      - name: Tidy module file
+        run: go mod tidy
+
+      - name: Download go modules
+        run: go mod download
+
+      - name: Verify go modules
+        run: go mod verify
+
+      - name: Build package
+        run: go build -v ./...
+
+      - name: Run tests
+        run: go test -cover -short -shuffle=on -timeout=2m -v ./...
+
+      - name: Run tests with race detector
+        run: go test -cover -race -short -shuffle=on -timeout=2m -v ./...
