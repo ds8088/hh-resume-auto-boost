@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -53,6 +54,15 @@ func hhAuthenticate(ctx *AppContext, cl *req.Client, xsrf string) error {
 	}
 
 	var hhResponse struct {
+		Recaptcha struct {
+			IsBot bool `json:"isBot"`
+		} `json:"recaptcha"`
+
+		HHCaptcha struct {
+			IsBot        bool   `json:"isBot"`
+			CaptchaState string `json:"captchaState"`
+		} `json:"hhcaptcha"`
+
 		RedirectUrl string `json:"redirectUrl"`
 		LoginError  struct {
 			Code        string `json:"code"`
@@ -63,6 +73,14 @@ func hhAuthenticate(ctx *AppContext, cl *req.Client, xsrf string) error {
 	err = json.NewDecoder(resp.Body).Decode(&hhResponse)
 	if err != nil {
 		return err
+	}
+
+	if hhResponse.Recaptcha.IsBot {
+		return errors.New("triggered ReCaptcha bot protection")
+	}
+
+	if hhResponse.HHCaptcha.IsBot {
+		return fmt.Errorf("triggered HHCaptcha bot protection: state = %v", hhResponse.HHCaptcha.CaptchaState)
 	}
 
 	if hhResponse.LoginError.Code != "" {
