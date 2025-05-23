@@ -62,6 +62,10 @@ type Config struct {
 	// but HH unexpectedly throws a HTTP 409 error (which means that the resume cannot be boosted yet).
 	// In this case, we wait for a bit (BoostBackoffDelay) and try again.
 	BoostBackoffDelay time.Duration `json:"boost_backoff_delay"`
+
+	// CookieJarFileName is the name of a file which will be used to store persistent cookies.
+	// If empty, cookie persistence is disabled.
+	CookieJarFileName string `json:"cookie_jar_file_name"`
 }
 
 // Instantiate instantiates a Config with a bunch of default values.
@@ -74,6 +78,8 @@ func (cfg *Config) Instantiate() {
 
 	cfg.BoostInterval = 4*time.Hour + 2*time.Minute
 	cfg.BoostBackoffDelay = 90 * time.Second
+
+	cfg.CookieJarFileName = "cookies.json"
 }
 
 // Load opens a JSON-formatted file specified by pathname

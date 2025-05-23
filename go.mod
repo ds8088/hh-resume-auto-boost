@@ -4,11 +4,13 @@ go 1.24
 
 require (
 	github.com/imroc/req/v3 v3.52.1
+	go.nhat.io/cookiejar v0.3.0
 	golang.org/x/net v0.40.0
 )
 
 require (
 	github.com/andybalholm/brotli v1.1.1 // indirect
+	github.com/bool64/ctxd v1.2.1 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/google/pprof v0.0.0-20250501235452-c0086092b71a // indirect
@@ -20,6 +22,7 @@ require (
 	github.com/quic-go/qpack v0.5.1 // indirect
 	github.com/quic-go/quic-go v0.52.0 // indirect
 	github.com/refraction-networking/utls v1.7.3 // indirect
+	github.com/spf13/afero v1.14.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.uber.org/mock v0.5.2 // indirect
 	golang.org/x/crypto v0.38.0 // indirect

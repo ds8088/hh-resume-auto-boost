@@ -1,12 +1,15 @@
 package main
 
 import (
+	"log/slog"
 	"math/rand/v2"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/imroc/req/v3"
+	"go.nhat.io/cookiejar"
+	"golang.org/x/net/publicsuffix"
 )
 
 func generateGreasedChromeVersion(chromeVersion int) string {
@@ -39,6 +42,17 @@ func createHTTPClient(ctx *AppContext) *req.Client {
 		client.DevMode()
 	}
 
+	if ctx.Cfg.CookieJarFileName != "" {
+		slog.Debug("using persistent cookie jar", "filename", ctx.Cfg.CookieJarFileName)
+
+		jar := cookiejar.NewPersistentJar(
+			cookiejar.WithFilePath(ctx.Cfg.CookieJarFileName),
+			cookiejar.WithAutoSync(true),
+			cookiejar.WithPublicSuffixList(publicsuffix.List),
+		)
+		client.SetCookieJar(jar)
+	}
+
 	client.EnableAutoDecompress()
 	client.SetMaxResponseHeaderBytes(2 * 1 << 20) // 2 MB
 	client.SetTimeout(50 * time.Second)
@@ -57,7 +71,7 @@ func createHTTPClient(ctx *AppContext) *req.Client {
 		"Sec-Fetch-Site": "same-origin",
 		"Sec-Fetch-User": "?1",
 
-		"Accept-Language": "en",
+		"Accept-Language": "en,ru;q=0.9",
 		"Accept-Encoding": "gzip, deflate, br, zstd",
 	})
 
