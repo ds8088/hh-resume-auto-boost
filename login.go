@@ -19,7 +19,7 @@ func hhAuthenticate(ctx *AppContext, cl *req.Client, xsrf string) error {
 		"X-Requested-With": "XMLHTTPRequest",
 		"X-Xsrftoken":      xsrf,
 		"X-Hhtmsource":     "account_login",
-		"X-Hhtmfrom":       "",
+		"X-Hhtmfrom":       "main",
 		"Accept":           "application/json",
 		"Referer":          buildHHURL(ctx, "/applicant/resumes?role=applicant"),
 	})
@@ -37,7 +37,7 @@ func hhAuthenticate(ctx *AppContext, cl *req.Client, xsrf string) error {
 
 	setGSSHeaders(cl, r)
 
-	resp, err := r.Post(buildHHURL(ctx, "/account/login?role=applicant"))
+	resp, err := r.Post(buildHHURL(ctx, "/account/login?backurl=%2Fapplicant%2Fresumes&role=applicant"))
 	if err != nil {
 		return fmt.Errorf("sending HTTP request: %w", err)
 	}
