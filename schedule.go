@@ -14,6 +14,8 @@ type resumeScheduler struct {
 
 	doneCh chan struct{}
 	stopCh chan struct{}
+
+	boostMu sync.Mutex
 }
 
 func newResumeScheduler() *resumeScheduler {
@@ -58,7 +60,7 @@ func (sched *resumeScheduler) waitAndBoost(ctx *AppContext, cl *req.Client, resu
 			}
 		}
 
-		err := hhBoostResume(ctx, cl, resume)
+		err := sched.exclusiveBoost(ctx, cl, resume)
 		if err != nil {
 			// wait a bit and retry
 			slog.Info("failed to boost resume, will schedule another attempt", "error", err.Error(), "wait_for", ctx.Cfg.BoostBackoffDelay)
@@ -75,6 +77,13 @@ func (sched *resumeScheduler) waitAndBoost(ctx *AppContext, cl *req.Client, resu
 
 		resume.lastBoost = time.Now()
 	}
+}
+
+func (sched *resumeScheduler) exclusiveBoost(ctx *AppContext, cl *req.Client, resume *hhResume) error {
+	sched.boostMu.Lock()
+	defer sched.boostMu.Unlock()
+
+	return hhBoostResume(ctx, cl, resume)
 }
 
 func (sched *resumeScheduler) done() <-chan struct{} {
