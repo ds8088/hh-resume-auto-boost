@@ -36,7 +36,7 @@
     "chrome_version": {
       "type": "string",
       "description": "Major version of impersonated Chrome browser",
-      "default": "135",
+      "default": "140",
       "minimum": 1
     },
     "ignored_resumes": {
@@ -112,6 +112,11 @@
       "type": "string",
       "description": "A Go duration: specifies how much we should wait if a boost is scheduled but HH unexpectedly throws an error",
       "default": "1m30s"
+    },
+    "cookie_jar_file_name": {
+      "type": "string",
+      "description": "File name for storing persistent cookies. If empty, cookie persistence is disabled.",
+      "default": "cookies.json"
     }
   }
 }

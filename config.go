@@ -71,7 +71,7 @@ type Config struct {
 // Instantiate instantiates a Config with a bunch of default values.
 func (cfg *Config) Instantiate() {
 	cfg.Endpoint = "https://hh.ru"
-	cfg.ChromeVersion = 136
+	cfg.ChromeVersion = 140
 
 	cfg.DiscoverInterval = 150 * time.Minute
 	cfg.DiscoverBackoffDelay = 5 * time.Minute
