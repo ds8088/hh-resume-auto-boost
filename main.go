@@ -87,7 +87,7 @@ func main() {
 
 	flag.Usage = func() {
 		fmt.Println("hh-resume-auto-boost v" + version + ": automatically boosts HeadHunter resumes\n" +
-			"Copyright (C) 2025 Dave S.\n\n" +
+			"Copyright (C) 2025-2026 Dave S.\n\n" +
 			"Usage:\n" +
 			"\t-d, --debug: enable debug output\n" +
 			"\t-c, --config: path to JSON-formatted config file (default: \"config.json\")\n" +
