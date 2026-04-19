@@ -8,9 +8,13 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
+	"strconv"
 	"strings"
 	"time"
 )
+
+const defaultHHEndpoint = "https://hh.ru"
 
 // Config represents the application configuration.
 type Config struct {
@@ -70,7 +74,7 @@ type Config struct {
 
 // Instantiate instantiates a Config with a bunch of default values.
 func (cfg *Config) Instantiate() {
-	cfg.Endpoint = "https://hh.ru"
+	cfg.Endpoint = defaultHHEndpoint
 	cfg.ChromeVersion = 147
 
 	cfg.DiscoverInterval = 150 * time.Minute
@@ -82,9 +86,9 @@ func (cfg *Config) Instantiate() {
 	cfg.CookieJarFileName = "cookies.json"
 }
 
-// Load opens a JSON-formatted file specified by pathname
+// LoadFromJSON opens a JSON-formatted file specified by pathname
 // and merges its contents to the Config instance.
-func (cfg *Config) Load(pathname string) error {
+func (cfg *Config) LoadFromJSON(pathname string) error {
 	if pathname == "" {
 		return errors.New("no pathname specified")
 	}
@@ -92,7 +96,7 @@ func (cfg *Config) Load(pathname string) error {
 	var f *os.File
 	f, err := os.Open(filepath.Clean(pathname))
 	if err != nil {
-		slog.Error("failed to open config file, will be running with default settings", "error", err)
+		slog.Warn("failed to open config file", "error", err)
 		return nil
 	}
 
@@ -177,6 +181,143 @@ func (cfg *Config) Validate() error {
 	}
 
 	return nil
+}
+
+// LoadFromEnv sets the Config instance according to the environment variables.
+//
+// Environment variable names are derived from json struct tags
+// (uppercased, of course).
+// Names of nested structs are concatenated with the underscore symbol.
+// Slices are parsed as a list of comma-separated values.
+//
+// If an environment variable is empty or missing, it is skipped.
+func (cfg *Config) LoadFromEnv() error {
+	return loadEnvFromStruct(reflect.ValueOf(cfg).Elem(), "")
+}
+
+// loadEnvFromStruct iterates over a reflect-wrapped struct,
+// setting config values if it finds a non-empty environment variable.
+func loadEnvFromStruct(v reflect.Value, prefix string) error {
+	t := v.Type()
+
+	for i := range t.NumField() {
+		f := t.Field(i)
+		if !f.IsExported() && !f.Anonymous {
+			continue // Ignore non-exported fields.
+		}
+
+		tag, ok := f.Tag.Lookup("json")
+		if !ok || tag == "" || tag == "-" {
+			continue // Not a valid tag, or the tag is empty.
+		}
+
+		// Construct the env var name.
+		tag, _, _ = strings.Cut(tag, ",")
+		envName := strings.ToUpper(prefix + tag)
+
+		val := v.Field(i)
+
+		// Iterate over nested structs.
+		if f.Type.Kind() == reflect.Struct {
+			err := loadEnvFromStruct(val, envName+"_")
+			if err != nil {
+				return err
+			}
+
+			continue
+		}
+
+		envVal := os.Getenv(envName)
+		if envVal == "" {
+			continue
+		}
+
+		// Type-switch over the field's kind.
+		switch f.Type.Kind() {
+		case reflect.String:
+			val.SetString(envVal)
+
+		case reflect.Bool:
+			v, err := strconv.ParseBool(envVal)
+			if err != nil {
+				return fmt.Errorf("parsing boolean env var %q: %w", envName, err)
+			}
+
+			val.SetBool(v)
+
+		case reflect.Int:
+			v, err := strconv.Atoi(envVal)
+			if err != nil {
+				return fmt.Errorf("parsing integer env var %q: %w", envName, err)
+			}
+
+			val.SetInt(int64(v))
+
+		case reflect.Int64:
+			if f.Type == reflect.TypeFor[time.Duration]() {
+				v, err := time.ParseDuration(envVal)
+				if err != nil {
+					return fmt.Errorf("parsing duration env var %q: %w", envName, err)
+				}
+
+				val.SetInt(int64(v))
+			} else {
+				v, err := strconv.ParseInt(envVal, 10, 64)
+				if err != nil {
+					return fmt.Errorf("parsing integer env var %q: %w", envName, err)
+				}
+
+				val.SetInt(v)
+			}
+
+		case reflect.Slice:
+			v, err := parseSliceString(envVal)
+			if err != nil {
+				return fmt.Errorf("parsing slice env var %q: %w", envName, err)
+			}
+
+			val.Set(reflect.ValueOf(v))
+		}
+	}
+
+	return nil
+}
+
+// parseSliceString splits a string by commas, supporting backslash escaping.
+func parseSliceString(s string) (res []string, err error) {
+	cur := strings.Builder{}
+	escaped := false
+
+	for _, c := range s {
+		if escaped {
+			cur.WriteRune(c)
+			escaped = false
+			continue
+		}
+
+		if c == '\\' {
+			escaped = true
+			continue
+		}
+
+		if c == ',' {
+			res = append(res, cur.String())
+			cur.Reset()
+			continue
+		}
+
+		cur.WriteRune(c)
+	}
+
+	if escaped {
+		return nil, errors.New("non-terminated escape sequence")
+	}
+
+	if cur.Len() > 0 {
+		res = append(res, cur.String())
+	}
+
+	return res, nil
 }
 
 func lowercaseSlice(sl []string) {

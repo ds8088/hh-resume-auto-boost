@@ -33,9 +33,14 @@ func runApp(ctx *AppContext, configPath string) error {
 	ctx.Context, cancel = signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	err := ctx.Cfg.Load(configPath)
+	err := ctx.Cfg.LoadFromEnv()
 	if err != nil {
-		return fmt.Errorf("loading config: %w", err)
+		return fmt.Errorf("loading config from env vars: %w", err)
+	}
+
+	err = ctx.Cfg.LoadFromJSON(configPath)
+	if err != nil {
+		return fmt.Errorf("loading config from JSON: %w", err)
 	}
 
 	err = ctx.Cfg.Validate()

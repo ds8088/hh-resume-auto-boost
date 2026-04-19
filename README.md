@@ -20,13 +20,24 @@ Existing tools didn't work for me so that's pretty much all the motivation behin
 3. Set your HeadHunter login and password in `config.json`;
 4. Start the tool.
 
-Alternatively, you may skip the configuration and run the tool with command-line arguments, such as:
+Alternatively, the configuration may be provided in the form of environment variables
+(their names mirror the key names in config.json):
+
+```sh
+LOGIN=+78005553535
+PASSWORD=Bash1234
+```
+
+You may also run the tool with command-line arguments, such as:
 
 `./hh-resume-auto-boost -l +78005553535 -p Bash1234`
 
 However, this is not recommended due to the risk of exposing your password in the OS process list,
 and furthermore, the password may be saved to your shell's command history,
-so it's preferable to use the config file instead.
+so it's preferable to use either the config file or environment variables instead.
+
+All available keys and their accepted values are documented in the [config schema](.schema.json);
+your IDE may automatically detect this file and, if so, both autocompletion and validation should work correctly.
 
 ## How it works
 
@@ -54,7 +65,15 @@ The entire directory should be mounted so that the tool can persist cookies acro
 docker run -v ~/hh-resume-auto-boost:/data ghcr.io/ds8088/hh-resume-auto-boost:latest
 ```
 
-As an alternative, you can run the container without a config file by passing CLI arguments (not recommended, because, as I mentioned previously, the password will become exposed in the OS process list):
+As an alternative, you can run the container without a config file by passing
+environment variables:
+
+```sh
+docker run -e LOGIN=+78005553535 -e PASSWORD=Bash1234 ghcr.io/ds8088/hh-resume-auto-boost:latest
+```
+
+CLI arguments are also supported (not recommended, because, as I mentioned previously,
+the password will become exposed in the OS process list):
 
 ```sh
 docker run ghcr.io/ds8088/hh-resume-auto-boost:latest -l +78005553535 -p Bash1234
