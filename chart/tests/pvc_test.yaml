@@ -1,0 +1,63 @@
+suite: PVC test
+templates:
+  - pvc.yaml
+release:
+  name: resume-boost
+set:
+  persistence.enabled: true
+
+tests:
+  - it: should render PVC with correct name
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isAPIVersion:
+          of: v1
+      - isKind:
+          of: PersistentVolumeClaim
+      - equal:
+          path: metadata.name
+          value: resume-boost-hh-resume-auto-boost
+
+  - it: should render nothing if persistence is disabled
+    set:
+      persistence.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should set a custom access mode if accessMode is provided
+    set:
+      persistence.accessMode: ReadWriteMany
+    asserts:
+      - contains:
+          path: spec.accessModes
+          content: ReadWriteMany
+
+  - it: should set a custom storage size
+    set:
+      persistence.size: 1Gi
+    asserts:
+      - equal:
+          path: spec.resources.requests.storage
+          value: 1Gi
+
+  - it: should set a custom storage class
+    set:
+      persistence.storageClass: ssd
+    asserts:
+      - equal:
+          path: spec.storageClassName
+          value: ssd
+
+  - it: should have the standard chart labels
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/component"]
+          value: hh-resume-auto-boost
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: hh-resume-auto-boost
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: resume-boost

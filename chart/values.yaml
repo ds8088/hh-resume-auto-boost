@@ -1,0 +1,66 @@
+image:
+  # Image repository URL.
+  repository: ghcr.io/ds8088/hh-resume-auto-boost
+
+  # Sets imagePullPolicy in Pod container spec.
+  pullPolicy: IfNotPresent
+
+  # Image tag. Defaults to .Chart.AppVersion.
+  tag: ""
+
+# Replaces the chart name from Chart.yaml, used as a prefix for object names.
+nameOverride: ""
+# Completely replaces the generated name for k8s objects.
+fullnameOverride: ""
+
+terminationGracePeriodSeconds: ""
+priorityClassName: ""
+
+# Persistence for the working directory (mainly for cookie storage).
+persistence:
+  # Set to true to enable persistence.
+  enabled: false
+  # Name of an existing PersistentVolumeClaim to use.
+  # If empty and persistence is enabled, a new PVC is created automatically.
+  existingClaim: ""
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 50Mi
+
+# Pod resources. Example:
+# limits:
+#   memory: 256Mi
+# requests:
+#   cpu: 25m
+#   memory: 32Mi
+resources: {}
+
+# Sets hostUsers on the pod spec.
+# Set to null to omit the field entirely.
+hostUsers: false
+
+podAnnotations: {}
+podLabels: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# HH credentials which would be stored in a Kubernetes Secret
+# and injected as LOGIN / PASSWORD environment variables.
+credentials:
+  login: ""
+  password: ""
+
+  # If set, use this existing Secret instead of creating a new Secret.
+  # The Secret must provide LOGIN and PASSWORD keys.
+  existingSecret: ""
+
+# Application configuration.
+config: {}
+
+# Extra environment variables which would be injected into the container.
+# Example:
+#   - name: BOOST_INTERVAL
+#     value: "4h2m"
+extraEnv: []

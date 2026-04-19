@@ -1,0 +1,135 @@
+suite: Deployment test
+templates:
+  - deployment.yaml
+release:
+  name: resume-boost
+  namespace: test-ns
+
+tests:
+  - it: should render Deployment with correct name
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isAPIVersion:
+          of: apps/v1
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: resume-boost-hh-resume-auto-boost
+      - equal:
+          path: metadata.namespace
+          value: test-ns
+
+  - it: uses the default replica count
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 1
+
+  - it: should set hostUsers to false
+    asserts:
+      - equal:
+          path: spec.template.spec.hostUsers
+          value: false
+
+  - it: should omit hostUsers field if set to null
+    set:
+      hostUsers: null
+    asserts:
+      - notExists:
+          path: spec.template.spec.hostUsers
+
+  - it: injects login and password from the Secret
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: LOGIN
+      - equal:
+          path: spec.template.spec.containers[0].env[0].valueFrom.secretKeyRef.key
+          value: LOGIN
+      - equal:
+          path: spec.template.spec.containers[0].env[1].name
+          value: PASSWORD
+      - equal:
+          path: spec.template.spec.containers[0].env[1].valueFrom.secretKeyRef.key
+          value: PASSWORD
+
+  - it: uses an existing credentials Secret if specified
+    set:
+      credentials.existingSecret: custom-secret
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].valueFrom.secretKeyRef.name
+          value: custom-secret
+      - equal:
+          path: spec.template.spec.containers[0].env[1].valueFrom.secretKeyRef.name
+          value: custom-secret
+
+  - it: should not set resources by default
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].resources
+
+  - it: should set resources when provided
+    set:
+      resources.requests.cpu: 100m
+      resources.limits.memory: 200Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 100m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 200Mi
+
+  - it: should append extra environment variables
+    set:
+      extraEnv:
+        - name: BOOST_INTERVAL
+          value: "4h2m"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[2].name
+          value: BOOST_INTERVAL
+      - equal:
+          path: spec.template.spec.containers[0].env[2].value
+          value: "4h2m"
+
+  - it: uses a PVC if persistence is enabled without an existing claim
+    set:
+      persistence.enabled: true
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.volumes[1].persistentVolumeClaim
+
+  - it: uses a custom PVC when persistence is enabled with an existing claim
+    set:
+      persistence.enabled: true
+      persistence.existingClaim: custom-pvc
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[1].persistentVolumeClaim.claimName
+          value: custom-pvc
+
+  - it: has checksum annotations for config and secret
+    asserts:
+      - isNotNull:
+          path: spec.template.metadata.annotations["checksum/config"]
+      - isNotNull:
+          path: spec.template.metadata.annotations["checksum/secret"]
+
+  - it: should use selector labels
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/name"]
+          value: hh-resume-auto-boost
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/instance"]
+          value: resume-boost
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/name"]
+          value: hh-resume-auto-boost
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/instance"]
+          value: resume-boost

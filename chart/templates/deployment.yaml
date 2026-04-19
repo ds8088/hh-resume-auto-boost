@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hh-resume-auto-boost.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "hh-resume-auto-boost.labels" . | nindent 4 }}
+    app.kubernetes.io/version: {{ .Values.image.tag | default .Chart.AppVersion | quote }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "hh-resume-auto-boost.selectorLabels" . | nindent 6 }}
+
+  template:
+    metadata:
+      labels:
+        {{- include "hh-resume-auto-boost.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        # This basically restarts the pod on Helm re-deployments if either ConfigMap or Secret changes.
+        checksum/config: {{ toYaml .Values.config | sha256sum }}
+        checksum/secret: {{ list .Values.credentials.login .Values.credentials.password | toJson | sha256sum }}
+        {{- with .Values.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+
+    spec:
+      {{- if .Values.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- end }}
+
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName | quote }}
+      {{- end }}
+
+      {{- if not (kindIs "invalid" .Values.hostUsers) }}
+      hostUsers: {{ .Values.hostUsers }}
+      {{- end }}
+
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --config
+            - /etc/hh-resume-auto-boost/config.json
+          env:
+            # Credentials are always injected from the Secret so they override the config file.
+            - name: LOGIN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "hh-resume-auto-boost.credentialsSecret" . }}
+                  key: LOGIN
+
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "hh-resume-auto-boost.credentialsSecret" . }}
+                  key: PASSWORD
+
+            {{- with .Values.extraEnv }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+          volumeMounts:
+            - name: config
+              mountPath: /etc/hh-resume-auto-boost/config.json
+              subPath: config.json
+              readOnly: true
+            - name: data
+              mountPath: /data
+
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "hh-resume-auto-boost.fullname" . }}-config
+            
+        - name: data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "hh-resume-auto-boost.fullname" .) }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}

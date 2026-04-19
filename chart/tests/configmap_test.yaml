@@ -1,0 +1,51 @@
+suite: ConfigMap test
+templates:
+  - configmap.yaml
+release:
+  name: resume-boost
+
+tests:
+  - it: should render ConfigMap with correct name
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isAPIVersion:
+          of: v1
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: resume-boost-hh-resume-auto-boost-config
+
+  - it: has the config.json data key
+    asserts:
+      - isNotNull:
+          path: data["config.json"]
+
+  - it: can use a custom endpoint
+    set:
+      config.endpoint: "https://staging.hh.ru"
+    asserts:
+      - matchRegex:
+          path: data["config.json"]
+          pattern: '"endpoint":"https://staging\.hh\.ru"'
+
+  - it: can use a custom chrome version
+    set:
+      config.chrome_version: 144
+    asserts:
+      - matchRegex:
+          path: data["config.json"]
+          pattern: '"chrome_version":144'
+
+  - it: should have the standard chart labels
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/component"]
+          value: hh-resume-auto-boost
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: hh-resume-auto-boost
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: resume-boost

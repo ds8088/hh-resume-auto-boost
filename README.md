@@ -79,6 +79,16 @@ the password will become exposed in the OS process list):
 docker run ghcr.io/ds8088/hh-resume-auto-boost:latest -l +78005553535 -p Bash1234
 ```
 
+## Helm chart
+
+A Helm chart is available in GHCR OCI:
+
+```sh
+helm install hh-resume-auto-boost oci://ghcr.io/ds8088/hh-resume-auto-boost/chart/hh-resume-auto-boost
+```
+
+[chart/values.yaml](./chart/values.yaml) contains all available configuration options.
+
 ## Building from source
 
 Go 1.25+ is required.
