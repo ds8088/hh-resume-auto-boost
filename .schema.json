@@ -34,9 +34,9 @@
       "default": "https://hh.ru"
     },
     "chrome_version": {
-      "type": "string",
+      "type": "integer",
       "description": "Major version of impersonated Chrome browser",
-      "default": "140",
+      "default": 147,
       "minimum": 1
     },
     "ignored_resumes": {
