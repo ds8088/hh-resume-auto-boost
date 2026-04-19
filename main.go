@@ -72,7 +72,7 @@ func main() {
 	ctx := &AppContext{}
 	ctx.Cfg.Instantiate()
 
-	version := "1.0.0"
+	version := "1.2.2"
 
 	var configPath string
 	flag.StringVar(&configPath, "c", "config.json", "")
