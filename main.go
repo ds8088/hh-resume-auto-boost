@@ -33,6 +33,10 @@ func runApp(ctx *AppContext, configPath string) error {
 	ctx.Context, cancel = signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
+	// Save login and password provided in CLI args to prevent them from being overwritten
+	cliLogin := ctx.Cfg.Login
+	cliPassword := ctx.Cfg.Password
+
 	err := ctx.Cfg.LoadFromEnv()
 	if err != nil {
 		return fmt.Errorf("loading config from env vars: %w", err)
@@ -41,6 +45,15 @@ func runApp(ctx *AppContext, configPath string) error {
 	err = ctx.Cfg.LoadFromJSON(configPath)
 	if err != nil {
 		return fmt.Errorf("loading config from JSON: %w", err)
+	}
+
+	// CLI login and password take priority over env vars and JSON config
+	if cliLogin != "" {
+		ctx.Cfg.Login = cliLogin
+	}
+
+	if cliPassword != "" {
+		ctx.Cfg.Password = cliPassword
 	}
 
 	err = ctx.Cfg.Validate()
@@ -99,7 +112,7 @@ func main() {
 			"\t-d, --debug: enable debug output\n" +
 			"\t-c, --config: path to JSON-formatted config file (default: \"config.json\")\n" +
 			"\t-l, --login: HeadHunter username (email, phone or login)\n" +
-			"\t-p, --password: HeadHunter password. Insecure; use config instead")
+			"\t-p, --password: HeadHunter password. Insecure; use config or env vars instead")
 	}
 
 	flag.Parse()
