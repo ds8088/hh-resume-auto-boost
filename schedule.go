@@ -12,7 +12,6 @@ type resumeScheduler struct {
 	resumes  map[string]*hhResume
 	resumeMu sync.Mutex
 
-	doneCh chan struct{}
 	stopCh chan struct{}
 
 	boostMu sync.Mutex
@@ -21,7 +20,6 @@ type resumeScheduler struct {
 func newResumeScheduler() *resumeScheduler {
 	return &resumeScheduler{
 		resumes: map[string]*hhResume{},
-		doneCh:  make(chan struct{}),
 		stopCh:  make(chan struct{}),
 	}
 }
@@ -45,7 +43,7 @@ func (sched *resumeScheduler) waitAndBoost(ctx *AppContext, cl *req.Client, resu
 	for {
 		nextBoostTime := resume.lastBoost.Add(ctx.Cfg.BoostInterval)
 
-		// If we're not yet reached the deadline, wait a bit
+		// If we have not yet reached the deadline, wait a bit
 		now := time.Now()
 		if nextBoostTime.After(now) {
 			slog.Info("scheduling resume boost", "id", resume.id, "title", resume.title, "boost_time", nextBoostTime)
@@ -90,13 +88,21 @@ func (sched *resumeScheduler) done() <-chan struct{} {
 	sched.resumeMu.Lock()
 	defer sched.resumeMu.Unlock()
 
+	// The logic is solid but the implementation is somewhat wacky.
+	// If there are no resumes - return a closed channel.
 	if len(sched.resumes) == 0 {
 		ch := make(chan struct{})
 		close(ch)
 		return ch
 	}
 
-	return sched.doneCh
+	// If there ARE resumes, the scheduler will never evict them,
+	// since it will infinitely try to re-schedule a resume
+	// even if its boost fails for any reason.
+	//
+	// Thus, we return a non-closed channel, so that the
+	// select prong for done() in main.go becomes a no-op.
+	return make(chan struct{})
 }
 
 func (sched *resumeScheduler) teardown() {
