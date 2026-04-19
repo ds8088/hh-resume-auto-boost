@@ -25,11 +25,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
-      - name: Run helm-unittest
-        uses: d3adb5/helm-unittest-action@850bc76597579183998069830d5fa8c3ef0ea34a
+      - name: Install Helm
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2
         with:
-          helm-version: v4.1.4
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version: v4.1.4
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install helm-unittest
+        run: |
+          helm plugin install https://github.com/helm-unittest/helm-unittest --verify=false --version "1.0.3"
+
+      - name: Run chart unit tests
+        run: helm unittest chart
 
   publish:
     name: Publish chart
@@ -44,17 +51,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
+      - name: Install Helm
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2
+        with:
+          version: v4.1.4
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+
       - name: Extract chart version from tag
         id: version
-        run: echo "version=${GITHUB_REF_NAME#v}" > "$GITHUB_OUTPUT"
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Publish chart to GHCR
-        uses: appany/helm-oci-chart-releaser@d94988c92bed2e09c6113981f15f8bb495d10943
-        with:
-          name: hh-resume-auto-boost
-          repository: ${{ github.repository_owner }}
-          tag: ${{ steps.version.outputs.version }}
-          path: chart
-          registry: ghcr.io
-          registry_username: ${{ github.actor }}
-          registry_password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Package and publish chart
+        run: |
+          helm package chart --version ${{ steps.version.outputs.version }}
+          helm push hh-resume-auto-boost-${{ steps.version.outputs.version }}.tgz oci://ghcr.io/${{ github.repository_owner }}/charts
