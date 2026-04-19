@@ -9,6 +9,7 @@ import (
 	"github.com/imroc/req/v3"
 )
 
+// hhAuthenticate authenticates against the HH backend.
 func hhAuthenticate(ctx *AppContext, cl *req.Client, xsrf string) error {
 	slog.Debug("authenticating in HH")
 

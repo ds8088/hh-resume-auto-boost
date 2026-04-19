@@ -12,6 +12,8 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
+// generateGreasedChromeVersion builds a simulated GREASE string,
+// replicating the algorithm that Chromium uses.
 func generateGreasedChromeVersion(chromeVersion int) string {
 	greasedChars := []rune{' ', '(', ':', '-', '.', '/', ')', ';', '=', '?', '_'}
 	greasedVersions := []int{8, 99, 24}
