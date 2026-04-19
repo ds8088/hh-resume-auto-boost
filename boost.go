@@ -51,7 +51,7 @@ func hhBoostResume(ctx *AppContext, cl *req.Client, resume *hhResume) error {
 	}
 
 	if !resp.IsSuccessState() {
-		return fmt.Errorf("received a HTTP error: %v", resp.StatusCode)
+		return fmt.Errorf("received an HTTP error: status code %v", resp.StatusCode)
 	}
 
 	slog.Info("boosted resume", "title", resume.title)

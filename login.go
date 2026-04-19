@@ -50,7 +50,7 @@ func hhAuthenticate(ctx *AppContext, cl *req.Client, xsrf string) error {
 	}()
 
 	if !resp.IsSuccessState() {
-		return fmt.Errorf("received a HTTP error: %v", resp.StatusCode)
+		return fmt.Errorf("received an HTTP error: status code %v", resp.StatusCode)
 	}
 
 	var hhResponse struct {
@@ -84,7 +84,7 @@ func hhAuthenticate(ctx *AppContext, cl *req.Client, xsrf string) error {
 	}
 
 	if hhResponse.LoginError.Code != "" {
-		return fmt.Errorf("authentication failure: \"%v\" / \"%v\"", hhResponse.LoginError.Code, hhResponse.LoginError.Translation)
+		return fmt.Errorf("authentication failure: %q (%q)", hhResponse.LoginError.Code, hhResponse.LoginError.Translation)
 	}
 
 	slog.Debug("authenticated successfully")

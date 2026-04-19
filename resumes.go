@@ -135,7 +135,7 @@ func hhGetResumes(ctx *AppContext, cl *req.Client, noAuth bool) (iter.Seq[*hhRes
 	}
 
 	if !resp.IsSuccessState() {
-		return nil, fmt.Errorf("received a HTTP error: %v", resp.StatusCode)
+		return nil, fmt.Errorf("received an HTTP error: status code %v", resp.StatusCode)
 	}
 
 	doc, err := html.Parse(resp.Body)
