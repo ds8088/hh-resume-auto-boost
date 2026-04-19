@@ -76,7 +76,7 @@ func getHHInitialState(doc *html.Node) string {
 }
 
 // extractResumes transforms the raw HH info structure into an array of resumes.
-func extractResumes(info *hhInfo, xsrf string) ([]hhResume, error) {
+func extractResumes(info *hhInfo, xsrf string) []hhResume {
 	resumes := make([]hhResume, 0, len(info.ApplicantResumes))
 
 	for _, resume := range info.ApplicantResumes {
@@ -94,7 +94,7 @@ func extractResumes(info *hhInfo, xsrf string) ([]hhResume, error) {
 		})
 	}
 
-	return resumes, nil
+	return resumes
 }
 
 // hhGetResumes retrieves and parses the resume list from HH.
@@ -157,10 +157,7 @@ func hhGetResumes(ctx *AppContext, cl *req.Client, noAuth bool) (iter.Seq[*hhRes
 	slog.Info("extracted HH account info", "email", info.Account.Email, "name", info.Account.FirstName+" "+info.Account.LastName)
 	slog.Debug("extracting resumes", "num_resumes", len(info.ApplicantResumes))
 
-	resumes, err := extractResumes(&info, xsrf)
-	if err != nil {
-		return nil, fmt.Errorf("extracting resumes: %w", err)
-	}
+	resumes := extractResumes(&info, xsrf)
 
 	return func(yield func(*hhResume) bool) {
 		for _, resume := range resumes {
