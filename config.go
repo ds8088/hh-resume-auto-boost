@@ -97,8 +97,8 @@ func (cfg *Config) Load(pathname string) error {
 	}
 
 	defer func() {
-		if err := f.Close(); err != nil {
-			slog.Error("failed to close config file", "error", err)
+		if closeErr := f.Close(); closeErr != nil {
+			slog.Error("failed to close config file", "error", closeErr)
 		}
 	}()
 
@@ -121,7 +121,7 @@ func (cfg *Config) Load(pathname string) error {
 	lowercaseSlice(cfg.IgnoredResumes.IDs)
 	lowercaseSlice(cfg.IgnoredResumes.Substrings)
 
-	return err
+	return nil
 }
 
 // Validate ensures that the Config instance's values are set correctly.

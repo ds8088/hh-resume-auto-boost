@@ -54,7 +54,7 @@ func createHTTPClient(ctx *AppContext) *req.Client {
 	}
 
 	client.EnableAutoDecompress()
-	client.SetMaxResponseHeaderBytes(2 * 1 << 20) // 2 MB
+	client.SetMaxResponseHeaderBytes(2 * (1 << 20)) // 2 MB
 	client.SetTimeout(50 * time.Second)
 	client.SetTLSHandshakeTimeout(25 * time.Second)
 	client.SetIdleConnTimeout(120 * time.Second)

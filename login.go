@@ -44,8 +44,8 @@ func hhAuthenticate(ctx *AppContext, cl *req.Client, xsrf string) error {
 	}
 
 	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			slog.Error("failed to close response body", "error", err)
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			slog.Error("failed to close response body", "error", closeErr)
 		}
 	}()
 
@@ -63,7 +63,7 @@ func hhAuthenticate(ctx *AppContext, cl *req.Client, xsrf string) error {
 			CaptchaState string `json:"captchaState"`
 		} `json:"hhcaptcha"`
 
-		RedirectUrl string `json:"redirectUrl"`
+		RedirectURL string `json:"redirectUrl"`
 		LoginError  struct {
 			Code        string `json:"code"`
 			Translation string `json:"trl"`

@@ -58,14 +58,15 @@ func getHHInitialState(doc *html.Node) string {
 		if n.Type == html.ElementNode && n.Data == "template" {
 			for _, attr := range n.Attr {
 				if attr.Key == "id" && strings.EqualFold(attr.Val, "HH-Lux-InitialState") {
-					data := ""
+					data := strings.Builder{}
+
 					for node := range n.ChildNodes() {
 						if node.Type == html.TextNode {
-							data += node.Data
+							data.WriteString(node.Data)
 						}
 					}
 
-					return data
+					return data.String()
 				}
 			}
 		}
@@ -79,7 +80,7 @@ func extractResumes(info *hhInfo, xsrf string) ([]hhResume, error) {
 	resumes := make([]hhResume, 0, len(info.ApplicantResumes))
 
 	for _, resume := range info.ApplicantResumes {
-		titles := []string{}
+		titles := make([]string, 0, len(resume.Title))
 		for _, t := range resume.Title {
 			titles = append(titles, t.Data)
 		}
@@ -113,8 +114,8 @@ func hhGetResumes(ctx *AppContext, cl *req.Client, noAuth bool) (iter.Seq[*hhRes
 	}
 
 	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			slog.Error("failed to close response body", "error", err)
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			slog.Error("failed to close response body", "error", closeErr)
 		}
 	}()
 
@@ -126,9 +127,9 @@ func hhGetResumes(ctx *AppContext, cl *req.Client, noAuth bool) (iter.Seq[*hhRes
 	if resp.StatusCode == http.StatusForbidden && !noAuth {
 		slog.Debug("got HTTP/403, attempting to authenticate")
 
-		err := hhAuthenticate(ctx, cl, xsrf)
-		if err != nil {
-			return nil, fmt.Errorf("authenticating in HH: %w", err)
+		authErr := hhAuthenticate(ctx, cl, xsrf)
+		if authErr != nil {
+			return nil, fmt.Errorf("authenticating in HH: %w", authErr)
 		}
 
 		return hhGetResumes(ctx, cl, true)
