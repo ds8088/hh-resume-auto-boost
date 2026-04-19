@@ -10,6 +10,10 @@ import (
 	"syscall"
 )
 
+// version defines the application version.
+// It is defined as a global var so that the version may be changed with -ldflags.
+var version = "dev"
+
 func setupLogger(ctx *AppContext) {
 	level := slog.LevelInfo
 	if ctx.Cfg.Debug {
@@ -71,8 +75,6 @@ func main() {
 
 	ctx := &AppContext{}
 	ctx.Cfg.Instantiate()
-
-	version := "1.2.2"
 
 	var configPath string
 	flag.StringVar(&configPath, "c", "config.json", "")

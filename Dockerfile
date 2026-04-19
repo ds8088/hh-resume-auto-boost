@@ -2,6 +2,7 @@ FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS builder
 
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
+ARG APP_VERSION=dev
 
 WORKDIR /opt/build
 
@@ -12,7 +13,7 @@ COPY *.go ./
 
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build \
     -trimpath \
-    -ldflags="-s -w" \
+    -ldflags="-s -w -X main.version=${APP_VERSION}" \
     -o hh-resume-auto-boost \
     .
 
