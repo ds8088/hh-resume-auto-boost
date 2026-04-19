@@ -172,10 +172,6 @@ func (cfg *Config) Validate() error {
 		return errors.New("resume boost backoff delay is too low")
 	}
 
-	if cfg.DiscoverInterval < 10*time.Minute {
-		return errors.New("resume discover interval is too low")
-	}
-
 	if cfg.DiscoverBackoffDelay < 30*time.Second {
 		return errors.New("resume discover backoff delay is too low")
 	}
