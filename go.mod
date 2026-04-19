@@ -1,4 +1,4 @@
-module git.pootis.network/hh-resume-auto-boost
+module github.com/ds8088/hh-resume-auto-boost
 
 go 1.25.0
 

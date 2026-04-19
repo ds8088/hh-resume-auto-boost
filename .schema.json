@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
-  "$id": "https://git.pootis.network/hh-resume-auto-boost/.schema.json",
+  "$id": "https://github.com/ds8088/hh-resume-auto-boost/.schema.json",
   "title": "hh-resume-auto-boost config schema",
   "type": "object",
   "required": [
