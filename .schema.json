@@ -25,7 +25,7 @@
     },
     "password": {
       "type": "string",
-      "description": "HeadHunter password that corredponds to the login",
+      "description": "HeadHunter password that corresponds to the login",
       "minLength": 1
     },
     "endpoint": {

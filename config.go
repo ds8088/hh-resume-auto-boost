@@ -59,7 +59,7 @@ type Config struct {
 	BoostInterval time.Duration `json:"boost_interval"`
 
 	// BoostBackoffDelay is the delay that occurs if a resume is scheduled for boosting,
-	// but HH unexpectedly throws a HTTP 409 error (which means that the resume cannot be boosted yet).
+	// but HH unexpectedly throws an HTTP 409 error (which means that the resume cannot be boosted yet).
 	// In this case, we wait for a bit (BoostBackoffDelay) and try again.
 	BoostBackoffDelay time.Duration `json:"boost_backoff_delay"`
 

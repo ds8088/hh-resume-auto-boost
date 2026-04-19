@@ -8,8 +8,8 @@ import (
 	"github.com/imroc/req/v3"
 )
 
-// discoverResumes keeps repeatedly yielding resume instances according to the DiscoveryInterval.
-// If DiscoveryInterval is zero, it performs the discovery only once and exits.
+// discoverResumes keeps repeatedly yielding resume instances according to the DiscoverInterval.
+// If DiscoverInterval is zero, it performs the discovery only once and exits.
 func discoverResumes(ctx *AppContext, cl *req.Client) iter.Seq[*hhResume] {
 	return func(yield func(*hhResume) bool) {
 		consecutiveFailures := 0

@@ -11,7 +11,7 @@ import (
 
 var ErrBoostTooEarly = errors.New("resume cannot be boosted yet (too early)")
 
-// hhBoostResume boots a single resume using the HeadHunter API.
+// hhBoostResume boosts a single resume using the HeadHunter API.
 func hhBoostResume(ctx *AppContext, cl *req.Client, resume *hhResume) error {
 	slog.Debug("boosting resume", "title", resume.title)
 
