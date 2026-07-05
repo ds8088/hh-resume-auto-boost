@@ -17,7 +17,7 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build \
     -o hh-resume-auto-boost \
     .
 
-FROM alpine:3.23
+FROM alpine:3.24
 
 COPY --from=builder /opt/build/hh-resume-auto-boost /opt/hh-resume-auto-boost
 
