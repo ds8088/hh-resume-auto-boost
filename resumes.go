@@ -38,41 +38,85 @@ type hhApplicantResume struct {
 	} `json:"title"`
 }
 
+// hhPhone is a phone number that may either be a plain string,
+// or a structured object.
+type hhPhone string
+
+func (p *hhPhone) UnmarshalJSON(data []byte) error {
+	plain := ""
+	if err := json.Unmarshal(data, &plain); err == nil {
+		*p = hhPhone(plain)
+		return nil
+	}
+
+	structured := struct {
+		Raw string `json:"raw"`
+	}{}
+
+	if err := json.Unmarshal(data, &structured); err != nil {
+		return fmt.Errorf("phone is neither a string nor a structured object: %w", err)
+	}
+
+	*p = hhPhone(structured.Raw)
+	return nil
+}
+
 type hhInfo struct {
 	Account struct {
-		Email     string `json:"email"`
-		FirstName string `json:"firstName"`
-		LastName  string `json:"lastName"`
-		Phone     string `json:"phone"`
+		Email     string  `json:"email"`
+		FirstName string  `json:"firstName"`
+		LastName  string  `json:"lastName"`
+		Phone     hhPhone `json:"phone"`
 	} `json:"account"`
 
 	ApplicantResumes []hhApplicantResume `json:"applicantResumes"`
 }
 
-// getHHInitialState retrieves a string representation of a template tag's contents;
-// the template tag must have an ID "HH-Lux-InitialState".
-// Basically this just does `document.querySelector('#HH-Lux-InitialState')?.innerHTML`
+// getHHInitialStates retrieves string representations of the contents of two template tag variants:
+//   - #HH-Lux-InitialState;
+//   - .ResumeProfileFront-InitialState.
+//
+// Basically this just does `document.querySelectorAll('#HH-Lux-InitialState, .ResumeProfileFront-InitialState')`
+// and takes the innerHTML of each match,
 // except that it also attempts to merge text nodes that act as the immediate children of the template.
-func getHHInitialState(doc *html.Node) string {
+func getHHInitialStates(doc *html.Node) []string {
+	states := []string{}
+
 	for n := range doc.Descendants() {
-		if n.Type == html.ElementNode && n.Data == "template" {
-			for _, attr := range n.Attr {
-				if attr.Key == "id" && strings.EqualFold(attr.Val, "HH-Lux-InitialState") {
-					data := strings.Builder{}
+		if n.Type != html.ElementNode || n.Data != "template" {
+			continue
+		}
 
-					for node := range n.ChildNodes() {
-						if node.Type == html.TextNode {
-							data.WriteString(node.Data)
-						}
-					}
+		matches := false
+		for _, attr := range n.Attr {
+			if attr.Key == "id" && strings.EqualFold(attr.Val, "HH-Lux-InitialState") {
+				matches = true
+				break
+			}
 
-					return data.String()
-				}
+			if attr.Key == "class" && slices.ContainsFunc(strings.Fields(attr.Val), func(class string) bool {
+				return strings.EqualFold(class, "ResumeProfileFront-InitialState")
+			}) {
+				matches = true
+				break
 			}
 		}
+
+		if !matches {
+			continue
+		}
+
+		data := strings.Builder{}
+		for node := range n.ChildNodes() {
+			if node.Type == html.TextNode {
+				data.WriteString(node.Data)
+			}
+		}
+
+		states = append(states, data.String())
 	}
 
-	return ""
+	return states
 }
 
 // extractResumes transforms the raw HH info structure into an array of resumes.
@@ -146,12 +190,41 @@ func hhGetResumes(ctx *AppContext, cl *req.Client, noAuth bool) (iter.Seq[*hhRes
 
 	slog.Debug("parsing resume list response body")
 
-	initialState := getHHInitialState(doc)
+	initialStates := getHHInitialStates(doc)
+	if len(initialStates) == 0 {
+		return nil, errors.New("no initial state templates found in HH response")
+	}
 
 	info := hhInfo{}
-	err = json.Unmarshal([]byte(initialState), &info)
-	if err != nil {
-		return nil, fmt.Errorf("unmarshalling HH initial state: %w", err)
+	parsed := false
+	seenResumes := map[string]bool{}
+
+	// Get the deduped resumes from the initial state slice.
+	for _, state := range initialStates {
+		partial := hhInfo{}
+		err = json.Unmarshal([]byte(state), &partial)
+		if err != nil {
+			slog.Warn("failed to unmarshal HH initial state, skipping", "error", err)
+			continue
+		}
+
+		parsed = true
+		if info.Account.Email == "" {
+			info.Account = partial.Account
+		}
+
+		for _, resume := range partial.ApplicantResumes {
+			if seenResumes[resume.Attributes.Hash] {
+				continue
+			}
+
+			seenResumes[resume.Attributes.Hash] = true
+			info.ApplicantResumes = append(info.ApplicantResumes, resume)
+		}
+	}
+
+	if !parsed {
+		return nil, errors.New("failed to unmarshal any HH initial state")
 	}
 
 	slog.Info("extracted HH account info", "email", info.Account.Email, "name", info.Account.FirstName+" "+info.Account.LastName)
